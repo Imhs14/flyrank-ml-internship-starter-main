@@ -45,8 +45,8 @@ jobs:
           if git ls-files | grep -E '\.(parquet|zip|tar|tar\.gz|feather)$'; then
             echo "::error::Committed a dataset archive. Datasets must not be committed."; exit 1
           fi
-          # Only one CSV is allowed under data/: the anonymized starter slice.
-          bad=$(git ls-files '*.csv' | grep -v -E '^(data/raw/content_refresh_anonymized\.csv|outputs/refresh_queue_sample\.csv)$' || true)
+          # Allow the starter slice and reviewed aggregate/reference tables only.
+          bad=$(git ls-files '*.csv' | grep -v -E '^(data/raw/content_refresh_anonymized\.csv|outputs/refresh_queue_sample\.csv|archetype_action_playbook\.csv|docs/archetype_action_playbook\.csv|results_table\.csv|docs/results_table\.csv)$' || true)
           if [ -n "$bad" ]; then
             echo "::error::Unexpected data file(s) committed:"; echo "$bad"; exit 1
           fi
