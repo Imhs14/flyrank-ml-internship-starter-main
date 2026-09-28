@@ -1,0 +1,4 @@
+method,precision@200
+Base rate (random),0.517
+Week-4 rule baseline,0.785
+Cluster archetype,0.59
