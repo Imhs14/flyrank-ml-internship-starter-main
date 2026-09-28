@@ -1,0 +1,6 @@
+cluster,pages,impressions,ctr,position,engagement,scroll,age_days,decline_rate,action,reason_code
+0,3330,5651.5,0.135,19.4,0.76,4.1,229.0,0.634,rewrite,"R2: high observed decline rate, low pull"
+1,9268,1250.0,0.14,9.5,0.0,4.665,125.0,0.635,rewrite,"R2: high observed decline rate, low pull"
+2,8090,575.0,0.04,11.65,0.0,0.0,362.0,0.438,protect,R5: below-average decline rate
+3,354,214.5,0.12,10.55,50.0,50.0,251.5,0.497,monitor,R3: small niche group
+4,1843,23.0,0.0,8.0,0.0,100.0,282.0,0.472,protect,R5: below-average decline rate

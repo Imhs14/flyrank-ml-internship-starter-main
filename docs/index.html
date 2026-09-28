@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Behavioral Archetypes for Content Review Prioritization</title>
+<style>
+body{font-family:Georgia,serif;max-width:760px;margin:2rem auto;padding:0 1rem;line-height:1.6;color:#222}
+h1{font-size:1.8rem} h2{margin-top:2rem;border-bottom:1px solid #ddd;padding-bottom:.2rem}
+img{max-width:100%} table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.95rem}
+td,th{border:1px solid #ccc;padding:.4rem .6rem;text-align:left} .note{background:#f6f6f6;padding:.7rem 1rem;border-left:4px solid #999}
+</style></head><body>
+<h1>Behavioral Archetypes for Content Review Prioritization</h1>
+<p><em>Heera Shanker · FlyRank ML Internship capstone · Lane: Structured Content Archetype Clustering</em></p>
+
+<h2>Abstract</h2>
+<p>Content teams cannot review every page, so which pages should they look at first? I grouped 30,000 pages from 32 anonymized clients into behavioral archetypes using K-Means on seven page-level signals. I validated the groups on held-out clients, using observed later decline (never used as a feature) as the yardstick. The riskiest archetype reached a measured precision@200 of 0.59 against a 0.52 base rate, but a hand-written CTR-vs-position rule reached 0.73. The archetypes are therefore directional decision-support for triage, and the simple rule remains the stronger single trigger.</p>
+
+<h2>1. Introduction</h2>
+<p>The decision: which pages enter a weekly review queue, and what action (protect, improve, rewrite, merge, prune, monitor) they get. A wrong call wastes editor time or leaves declining pages unattended. Clustering has no ground truth, so this paper checks the groups against an external, later outcome.</p>
+
+<h2>2. Data</h2>
+<p>Anonymized FlyRank ML Internship starter release: 30,000 pages, 32 clients, one row per page over a 90-day window. The design was informed by the warehouse data contract (daily grain verified with zero duplicate rows on the March 2026 partition; 9.84M rows). Word count (7,699 missing) and scroll rate (125 missing) were median-filled with missing-indicator flags. No client names, domains, URLs or queries are included. Client history depth is unbalanced (28 to 519 days), so archetypes may partly reflect tracking length.</p>
+
+<h2>3. Methodology</h2>
+<ul>
+<li><b>Features:</b> average position, CTR, 90-day impressions, word count, content age, engagement rate, scroll rate (standardized on train only).</li>
+<li><b>Excluded as label-derived or future-window:</b> trend_direction, trend_pct, is_declining_label, needs_ctr_fix, health_score, priority_score, action_type.</li>
+<li><b>Model:</b> K-Means, k chosen with the elbow method and silhouette over k=3 to 8 (best k = {{best_k}}, silhouette {{sil}}). Seed stability, mean ARI = {{ari}}. The k=5 solution was used for the results below.</li>
+<li><b>Split:</b> grouped by client, 75/25, zero client overlap. Random-split precision was 0.565 vs 0.590 grouped, so client leakage was not inflating results.</li>
+<li><b>Leakage check:</b> adding the label as a feature pushed precision from 0.59 to 1.00, confirming the audit detects leakage and the final features are clean.</li>
+<li><b>Baseline:</b> a rule flagging visible pages (300+ impressions) whose CTR trails the average for their position tier.</li>
+</ul>
+<img src="k_selection.png" alt="Elbow and silhouette by k"><img src="pca_clusters.png" alt="Archetypes in PCA space">
+
+<h2>4. Results</h2>
+<table><tr><th>Method (held-out clients)</th><th>precision@200</th></tr>
+<tr><td>Base rate (random)</td><td>0.517</td></tr><tr><td>Week-4 rule baseline</td><td>0.730</td></tr><tr><td>Cluster archetype</td><td>0.590</td></tr></table>
+<img src="results.png" alt="Precision at 200">
+<p>In training, the two riskiest archetypes showed observed decline rates near 63% (about 9,300 and 3,300 pages), versus 44% to 50% for the others. The riskiest large group had moderate traffic, weak CTR, low engagement and low scroll depth: pages seen but not read. The clusters beat chance but not the targeted rule, which makes sense: K-Means groups pages that look alike overall and is not optimized to separate declining from stable pages.</p>
+
+<h2>5. Limitations and honest framing</h2>
+<div class="note">Observed, measured and directional only. This work does not prove why a page declines, does not predict individual pages, does not analyze page text or topics, and makes no claim about Google's algorithm or any causal effect of refreshing. Decline is a trend label from the same release, and cluster names are human interpretations added after inspecting each group.</div>
+
+<h2>6. Ranked recommendations</h2>
+<ol>
+<li><b>Improve (metadata and content review), first:</b> the large archetype with moderate impressions, weak CTR, low engagement, and 63% observed decline rate.</li>
+<li><b>Rewrite review, second:</b> the other high-decline archetype (63%) with lower pull.</li>
+<li><b>Use the CTR-vs-position rule as the first-pass filter</b>, then use archetypes to decide the action type.</li>
+<li><b>Monitor:</b> the small niche archetype (about 350 pages, 50% decline).</li>
+<li><b>Protect:</b> archetypes with below-average decline (44% to 47%); check them only on a schedule.</li>
+</ol>
+<p>Full playbook with reason codes: <a href="archetype_action_playbook.csv">archetype_action_playbook.csv</a>. Check the action labels against your cell 3 profile table before you publish.</p>
+
+<h2>7. Reproducibility</h2>
+<p>Notebooks and code: <a href="https://github.com/Imhs14/flyrank-ml-internship-starter-main">github.com/Imhs14/flyrank-ml-internship-starter-main</a> (folder <code>work/notebooks</code>: w01, w02, w03, w05, w06 and capstone_archetypes). Fixed random_state=42 throughout.</p>
+
+<h2>8. Acknowledgments and data credit</h2>
+<p>Built on the <a href="https://flyrank.ai" target="_blank" rel="noopener">FlyRank ML Internship dataset</a>. Thanks to the FlyRank AI team for the program and data access.</p>
+</body></html>
